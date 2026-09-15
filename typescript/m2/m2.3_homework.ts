@@ -49,15 +49,18 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 //   - Give it a persona (data analyst, scientist, whatever fits your data).
 //   - Tell it to write code to a file before running it (the same pattern
 //     Lab 1 used).
-//   - Tell it to install any packages it needs with pip before importing
-//     them (the same pattern Lab 2 used) - matplotlib is not preinstalled.
+//   - Tell it to install packages with `pip install --break-system-packages
+//     <package>` (the same pattern Lab 2 used), since this sandbox Python is
+//     externally managed, so a bare `pip install` fails and matplotlib is
+//     not preinstalled.
 //   - Tell it to use matplotlib when asked to build a chart.
 //
 // Example (delete this and write your own):
 //   const SYSTEM_PROMPT =
 //     "You are a data visualization assistant. When asked to run code, " +
-//     "write the script to a file first, then execute it. Install any " +
-//     "packages you need with pip before importing them. When asked " +
+//     "write the script to a file first, then execute it. Install packages " +
+//     "with `pip install --break-system-packages <package>` (e.g. `pip " +
+//     "install --break-system-packages matplotlib`). When asked " +
 //     "for a chart, use matplotlib and save it as a .png file.";
 // ════════════════════════════════════════════════════════════════════════
 

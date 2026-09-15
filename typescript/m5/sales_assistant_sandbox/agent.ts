@@ -48,8 +48,10 @@ const SYSTEM_PROMPT = context`
   Your entire filesystem — skills, memory, and anything you write — lives
   inside an isolated sandbox; there is no separate local filesystem. To
   produce a chart, write a Python script with write_file and run it with
-  execute (e.g. \`pip install matplotlib && python3 <script>\`), saving the
-  image under /outputs/.`;
+  execute. This sandbox Python is externally managed, so install packages
+  with \`pip install --break-system-packages <package> && python3 <script>\`
+  (e.g. \`pip install --break-system-packages matplotlib && python3
+  <script>\`), saving the image under /outputs/.`;
 
 const MAIL_SERVER = { transport: "http" as const, url: "http://127.0.0.1:5002/mcp" };
 
