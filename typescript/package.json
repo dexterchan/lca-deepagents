@@ -11,8 +11,8 @@
   "dependencies": {
     "@inquirer/prompts": "^8.5.2",
     "@langchain/anthropic": "latest",
-    "@langchain/core": "^1.2.3",
-    "@langchain/langgraph": "^1.4.8",
+    "@langchain/core": "^1.2.11",
+    "@langchain/langgraph": "^1.4.10",
     "@langchain/mcp-adapters": "latest",
     "@langchain/ollama": "latest",
     "@langchain/openai": "latest",
@@ -22,8 +22,8 @@
     "canvas": "^3.2.3",
     "deepagents": "latest",
     "dotenv": "^17.4.2",
-    "langchain": "^1.5.4",
-    "langsmith": "^0.7.17",
+    "langchain": "^1.5.10",
+    "langsmith": "^0.9.0",
     "marked": "latest",
     "sanitize-html": "latest",
     "zod": "^4.4.3"
