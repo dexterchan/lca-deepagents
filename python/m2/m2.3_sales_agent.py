@@ -1,19 +1,21 @@
+import os
 from pathlib import Path
 from uuid import uuid4
 
+from bedrock_agentcore.tools.code_interpreter_client import CodeInterpreter
 from deepagents import create_deep_agent
-from deepagents.backends.langsmith import LangSmithSandbox
-from langsmith.sandbox import SandboxClient
+from langchain_agentcore_codeinterpreter import AgentCoreSandbox
 
 from models import model
 
 DB_PATH = Path(__file__).resolve().parent / "chinook.db"
 
-client = SandboxClient()
-ls_sandbox = client.create_sandbox(name=f"lca-deepagents-lab-{uuid4().hex[:8]}")
-print(f"Sandbox: {ls_sandbox.name}  (id: {ls_sandbox.id})")
+region = os.environ.get("AWS_REGION", "us-west-2")
+interpreter = CodeInterpreter(region)
+session_id = interpreter.start(name=f"lca-deepagents-lab-{uuid4().hex[:8]}")
+print(f"Sandbox session: {session_id}  (region: {region})")
 
-backend = LangSmithSandbox(sandbox=ls_sandbox)
+backend = AgentCoreSandbox(interpreter=interpreter)
 
 with open(DB_PATH, "rb") as f:
     upload_results = backend.upload_files([("/chinook.db", f.read())])
@@ -59,10 +61,14 @@ try:
     )
     print(result["messages"][-1].content)
 
-    png_bytes = ls_sandbox.read("/genre_revenue.png")
+    download_results = backend.download_files(["/genre_revenue.png"])
+    download_result = download_results[0]
+    if download_result.error:
+        raise RuntimeError(f"Failed to download {download_result.path}: {download_result.error}")
+
     out_path = Path(__file__).parent / "genre_revenue.png"
-    out_path.write_bytes(png_bytes)
+    out_path.write_bytes(download_result.content)
     print(f"Chart saved to {out_path}")
 
 finally:
-    client.delete_sandbox(ls_sandbox.name)
+    interpreter.stop()
