@@ -1,3 +1,5 @@
+import uuid
+
 import questionary
 from deepagents import create_deep_agent
 from langchain_core.tools import tool
@@ -29,6 +31,7 @@ Rules:
 - Keep emails concise and professional.
 - Do not claim an email was sent until the tool result confirms it.
 - When confirming an email was sent, quote the subject and body from the tool result, not the original request.
+- If the decision is not "approve", you must ask for approve/edit/reject before sending the email.
 """
 
 agent = create_deep_agent(
@@ -44,6 +47,8 @@ agent = create_deep_agent(
 
 config = {"configurable": {"thread_id": "m1-8-hitl-respond-demo"}}
 
+run_id = uuid.uuid4()
+print(f"Run ID (for tracing): {run_id}")
 result = agent.invoke(
     {
         "messages": [
@@ -56,13 +61,14 @@ result = agent.invoke(
             }
         ]
     },
-    config=config,
+    config={**config, "run_id": run_id},
     version="v2",
 )
+decisions = []
 
 while result.interrupts:
     pending = result.interrupts[0].value
-    decisions = []
+    
     for req in pending["action_requests"]:
         if req["name"] == "ask_user":
             selected = questionary.select(
@@ -73,7 +79,12 @@ while result.interrupts:
 
         elif req["name"] == "send_email":
             print(f"\nApproval required for {req['name']}:")
-            print(req["args"])
+            
+            if decisions and decisions[-1]["type"] == "edit":
+                current_body = decisions[-1]["edited_action"]["args"]["body"]
+            else:
+                current_body = req["args"]["body"]
+            print(f"\nEmail body:\n{current_body}")
 
             action = questionary.select(
                 "How do you want to handle this email?",
@@ -96,9 +107,16 @@ while result.interrupts:
                     {"type": "reject", "message": "User rejected this email draft."}
                 )
 
-    result = agent.invoke(Command(resume={"decisions": decisions}), config=config, version="v2")
+    
+    print(f"decisions: {decisions[-1:]}")
+    result = agent.invoke(
+        Command(resume={"decisions": decisions[-1:]}),
+        config={**config, "run_id": run_id},
+        version="v2",
+    )
+    print(result.interrupts)
 
 for msg in result.value["messages"]:
-    if hasattr(msg, "name") and msg.name == "send_email":
+    if hasattr(msg, "name") and msg.name == "send_email" and decisions and decisions[-1]["type"] == "approve":
         print(msg.content)
         break

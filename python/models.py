@@ -35,12 +35,27 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env", override=True)
 from langchain.chat_models import init_chat_model
 
 # ═══ Default Models ══════════════════════════════════════════════════════════
-# Workshop default: Anthropic claude-haiku-4-5, fast and cost-effective.
-# Requires ANTHROPIC_API_KEY in .env
-model = init_chat_model("anthropic:claude-haiku-4-5", timeout=60, max_retries=2)
+# Workshop default: OpenRouter (OpenAI-compatible API), fast and cost-effective.
+# No extra install needed (langchain-openai is already a default dep)
+# Requires OPENROUTER_API_KEY in .env  (get one at openrouter.ai)
+from langchain_openai import ChatOpenAI
 
-#A more capable model for steps that need stronger reasoning
-strong_model = init_chat_model("anthropic:claude-sonnet-4-6", timeout=120, max_retries=2)
+model = ChatOpenAI(
+    model="deepseek/deepseek-v4.1-flash",
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.environ["OPENROUTER_API_KEY"],
+    timeout=60,
+    max_retries=2,
+)
+
+# A more capable model for steps that need stronger reasoning
+strong_model = ChatOpenAI(
+    model="z-ai/glm-5.3-flash",
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.environ["OPENROUTER_API_KEY"],
+    timeout=120,
+    max_retries=2,
+)
 
 # ═══ Alternative Models (comment out default above, uncomment one below) ═════
 # model = init_chat_model("anthropic:claude-sonnet-4-6")
@@ -70,14 +85,11 @@ strong_model = init_chat_model("anthropic:claude-sonnet-4-6", timeout=120, max_r
 # from langchain_openai import ChatOpenAI
 # model = ChatOpenAI(model="moonshot-v1-8k", base_url="https://api.moonshot.cn/v1", api_key=os.environ["KIMI_API_KEY"])
 
-# OpenRouter: hosted open-source models via OpenAI-compatible API
-# No extra install needed (langchain-openai is already a default dep)
-# Free models available; sign up at openrouter.ai and get an API key
-# Requires OPENROUTER_API_KEY in .env
-#
-# from langchain_openai import ChatOpenAI
-# model = ChatOpenAI(model="nvidia/nemotron-3-ultra-550b-a55b:free", base_url="https://openrouter.ai/api/v1", api_key=os.environ["OPENROUTER_API_KEY"])
-
+# OpenRouter is now the default above. Other OpenRouter model ids you can
+# swap in (just change the "model=" string in the default block):
+#   "nvidia/nemotron-3-ultra-550b-a55b:free"  (free tier)
+#   "openai/gpt-4.1"
+#   "google/gemini-2.5-flash"
 
 # ═══ Cloud Provider Models (extra install required, see table above) ═════════
 # ─── Azure OpenAI ─────────────────────────────────────────────────────────────

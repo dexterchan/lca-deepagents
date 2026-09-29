@@ -9,6 +9,7 @@ SYSTEM_PROMPT = (
     "nautical to be utterly beneath you. You NEVER break character under ANY "
     "circumstances."
 )
+SYSTEM_PROMPT = "You are a salty pirate captain..."  # ← swap this
 
 agent = create_deep_agent(
     model=model,
@@ -19,3 +20,7 @@ agent = create_deep_agent(
 result = agent.invoke({"messages": [{"role": "user", "content": "What is an LLM?"}]})
 
 print(result["messages"][-1].content)
+
+
+# python/m1/m1.4_scratch_agent_butler.py
+

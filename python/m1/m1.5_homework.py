@@ -22,14 +22,17 @@ RUN
   uv run ./m1/m1.5_homework.py
 """
 
+#%% initialize
 import warnings
-
+import os
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from langchain_core.tools import tool
 
 from deepagents import create_deep_agent
 from models import model
+from  dotenv import load_dotenv
+import requests
 
 
 # ════════════════════════════════════════════════════════════════════════
@@ -50,12 +53,35 @@ from models import model
 #       ...
 # ════════════════════════════════════════════════════════════════════════
 
+class MktData:
+    """A simple class to fetch market data from a public API."""
+
+    def __init__(self):
+        load_dotenv(override=True)
+        api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
+        internval = "5min"
+        self.api_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={{}}&interval={internval}&apikey={api_key}"
+
+    def get_price(self, symbol: str, currency: str = "usd") -> dict:
+        """Fetch the current price of a cryptocurrency."""
+        try:
+            _url = self.api_url.format(symbol)
+            response = requests.get(_url)
+            response.raise_for_status()
+            data = response.json()
+            return data
+        except requests.RequestException as e:
+            return f"Error fetching price data: {e}"
+
+mktdata = MktData()
+
 @tool
-def your_custom_tool(query: str) -> str:
-    """TODO 1: replace this docstring and body with your own tool."""
-    raise NotImplementedError("TODO 1: see the comment block above")
+def markdata_tool(query: str) -> dict:
+    """Provides financial advice based on the user's query."""
+    mkt_data:dict = mktdata.get_price(query)
+    return f"this is your financial advice on: {mkt_data}"
 
-
+#%% Execute the agent with a test prompt
 # ════════════════════════════════════════════════════════════════════════
 # TODO 2: Write a system prompt for your agent.
 #
@@ -65,19 +91,19 @@ def your_custom_tool(query: str) -> str:
 # read_sql.
 # ════════════════════════════════════════════════════════════════════════
 
-SYSTEM_PROMPT = """TODO 2: replace this with your own system prompt."""
+SYSTEM_PROMPT = """You are a financial advisor. You specialize in financial data analysis and provide insights based on market trends. You have access to a tool called markdata_tool that fetches real-time market data for various financial instruments. Before answering any user query related to financial advice, you must call markdata_tool to retrieve the latest data and base your response on that information. Always provide clear, concise, and actionable advice, and ensure that your recommendations are backed by the most recent market data available."""
 
 # Guards against running with an unfilled placeholder; the filled
 # reference doesn't need this since there's no placeholder text left.
-if "TODO 1" in your_custom_tool.description:
+if "TODO 1" in markdata_tool.description:
     raise NotImplementedError("TODO 1: see the comment block above")
 if "TODO 2" in SYSTEM_PROMPT:
     raise NotImplementedError("TODO 2: see the comment block above")
 
 agent = create_deep_agent(
     model=model,
-    name="Homework_Agent",
-    tools=[your_custom_tool],
+    name="Finance_agent",
+    tools=[markdata_tool],
     system_prompt=SYSTEM_PROMPT,
 )
 
@@ -86,3 +112,12 @@ result = agent.invoke(
 )
 
 print(result["messages"][-1].content)
+
+# %%
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "tell me the trend of AAPL?"}]}
+)
+
+from pprint import pprint
+pprint(result["messages"][-1].content)
+# %%

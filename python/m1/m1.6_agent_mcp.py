@@ -1,3 +1,4 @@
+#%%
 import asyncio
 
 from deepagents import create_deep_agent
@@ -35,5 +36,10 @@ async def main():
     })
     print(result["messages"][-1].content)
 
+#%%
+# if __name__ == "__main__":
+#     asyncio.run(main())
+# else:
+await main()
 
-asyncio.run(main())
+# %%

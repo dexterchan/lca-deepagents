@@ -1,3 +1,4 @@
+#%%
 # python/m1/m1.7_homework_filled.py
 """Reference copy of m1.7_homework.py with TODOs 1 and 2 filled in so you
 can run it end to end and see what "done" looks like. This is just one
@@ -11,10 +12,10 @@ from deepagents import create_deep_agent
 from langgraph.checkpoint.memory import MemorySaver
 
 from models import model
-
+memory_instance = MemorySaver()
 agent = create_deep_agent(
     model=model,
-    checkpointer=MemorySaver(),
+    checkpointer=memory_instance,
 )
 
 # TODO 1 filled in
@@ -23,7 +24,7 @@ thread_b = {"configurable": {"thread_id": "m1-7-homework-thread-b"}}
 
 FACT_QUESTION = "What's my iguana's name and what does he eat?"
 
-
+#%%
 # TODO 2 filled in
 def run_scenario():
     result = agent.invoke(
@@ -62,5 +63,17 @@ def run_scenario():
         "string alone."
     )
 
-
+#%%
 run_scenario()
+
+# %%
+fresh_agent = create_deep_agent(model=model, checkpointer=memory_instance)
+result = fresh_agent.invoke(
+        {"messages": [{"role": "user", "content": FACT_QUESTION}]},
+        config=thread_a,
+    )
+print("\nFresh agent, thread_a's thread_id, but same MemorySaver instance (should know):")
+print(result["messages"][-1].content)
+
+
+# %%

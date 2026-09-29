@@ -52,7 +52,7 @@ from models import model
 #   )
 # ════════════════════════════════════════════════════════════════════════
 
-SYSTEM_PROMPT = "TODO 1: replace this with your own domain-scoping system prompt."
+SYSTEM_PROMPT = "You are financial advisor. You only answer questions about personal finance. If asked about anything else, you will politely refuse and redirect the user back to personal finance topics."
 
 
 agent = create_deep_agent(
@@ -71,7 +71,8 @@ agent = create_deep_agent(
 def run_test_prompts():
     """TODO 2: invoke `agent` with one in-domain prompt and one
     out-of-domain prompt, and print each response."""
-    raise NotImplementedError("TODO 2: see the comment block above")
+    res = agent.invoke({"messages": [{"role": "user", "content": "What is a good investment strategy for retirement?"}]})
+    print(res["messages"][-1].content)
 
 
 run_test_prompts()

@@ -1,3 +1,4 @@
+#%%
 from deepagents import create_deep_agent
 from langchain_core.tools import tool
 from langgraph.checkpoint.memory import MemorySaver
@@ -20,7 +21,7 @@ Rules:
 - Do not claim an email was sent until the tool result confirms it.
 - When confirming an email was sent, quote the subject and body from the tool result, not the original request.
 """
-
+#%%
 agent = create_deep_agent(
     model=model,
     tools=[send_email],
@@ -43,13 +44,22 @@ result = agent.invoke(
     config=config,
     version="v2",
 )
-
+#%%
+decisions = []
 while result.interrupts:
     pending = result.interrupts[0].value
-    decisions = []
+    
+    current_body = None
     for req in pending["action_requests"]:
         print(f"\nApproval required for {req['name']}:")
         print(req["args"])
+        print(decisions)
+        if decisions and decisions[-1]["type"] == "edit":
+            current_body = decisions[-1]["edited_action"]["args"]["body"]
+        else:
+            current_body = req["args"]["body"]
+        
+        print(f"\nEmail body:\n{current_body}")
 
         choice = input("\nApprove, edit, or reject? (approve/edit/reject): ").strip().lower()
         if choice in ("approve", "yes", "y"):
@@ -68,9 +78,9 @@ while result.interrupts:
                 {"type": "reject", "message": "User rejected this email draft."}
             )
 
-    result = agent.invoke(Command(resume={"decisions": decisions}), config=config, version="v2")
-
+    result = agent.invoke(Command(resume={"decisions": decisions[-1:]}), config=config, version="v2")
+#%%
 for msg in result.value["messages"]:
-    if hasattr(msg, "name") and msg.name == "send_email":
+    if hasattr(msg, "name") and msg.name == "send_email" and decisions and decisions[-1]["type"] == "approve":
         print(msg.content)
         break

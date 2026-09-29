@@ -59,12 +59,18 @@ agent_with = create_deep_agent(
     ),
 )
 
+run_id_with = uuid.uuid4()
 result_with = agent_with.invoke(
     {"messages": [{"role": "user", "content": TASK}]},
-    config={"configurable": {"thread_id": str(uuid.uuid4())}},
+    config={
+        "configurable": {"thread_id": "with_code_interpreter_"+str(uuid.uuid4())},
+        "run_id": run_id_with,
+        "run_name": "m2.4 with interpreter",
+    },
 )
 
 print("=== With interpreter ===")
+print(f"LangSmith run_id: {run_id_with}")
 print(result_with["messages"][-1].content)
 
 # --- Agent without interpreter ---
@@ -75,10 +81,16 @@ agent_without = create_deep_agent(
     system_prompt=SYSTEM,
 )
 
+run_id_without = uuid.uuid4()
 result_without = agent_without.invoke(
     {"messages": [{"role": "user", "content": TASK}]},
-    config={"configurable": {"thread_id": str(uuid.uuid4())}},
+    config={
+        "configurable": {"thread_id": "without_code_interpreter_"+str(uuid.uuid4())},
+        "run_id": run_id_without,
+        "run_name": "m2.4 without interpreter",
+    },
 )
 
 print("\n=== Without interpreter ===")
+print(f"LangSmith run_id: {run_id_without}")
 print(result_without["messages"][-1].content)

@@ -1,4 +1,5 @@
 # python/m2/m2.2_agent.py
+#%%
 from pathlib import Path
 
 from deepagents import FilesystemPermission, create_deep_agent
@@ -18,7 +19,7 @@ Responsibilities:
 - Recommend music based on genre and artist preferences
 - Answer questions about artists, albums, tracks, and invoices
 """)
-
+#%%
 agent = create_deep_agent(
     model=model,
     backend=CompositeBackend(
@@ -38,7 +39,7 @@ agent = create_deep_agent(
         ),
     ],
 )
-
+#%%
 result = agent.invoke(
     {
         "messages": [
@@ -55,3 +56,5 @@ result = agent.invoke(
 )
 
 print(result["messages"][-1].content)
+
+# %%

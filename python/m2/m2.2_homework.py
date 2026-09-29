@@ -27,11 +27,10 @@ RUN
 
 from pathlib import Path
 
-from deepagents import FilesystemPermission, create_deep_agent
+from deepagents import FilesystemMiddleware, FilesystemPermission, create_deep_agent
 from deepagents.backends import CompositeBackend, FilesystemBackend, StateBackend
 
 from models import model
-
 
 # ════════════════════════════════════════════════════════════════════════
 # TODO 1: Configure a backend for a topic of your choosing.
@@ -51,9 +50,24 @@ from models import model
 #   (my_dir / "notes.md").write_text("...")
 #   backend = FilesystemBackend(root_dir=str(my_dir), virtual_mode=True)
 # ════════════════════════════════════════════════════════════════════════
+reference_dir:str = Path(__file__).parent / "reference"
+reference_dir.mkdir(exist_ok=True)
 
-backend = None  # TODO 1: replace with a StateBackend, FilesystemBackend, or CompositeBackend
+backend = CompositeBackend(
+        default=StateBackend(),
+        routes={
+            "/reference/": FilesystemBackend(
+                root_dir=str(reference_dir),
+                virtual_mode=True,
+            ),
+        },
+    )  # TODO 1: replace with a StateBackend, FilesystemBackend, or CompositeBackend
 
+with open(reference_dir / "my_file.txt", "w") as f:
+    f.write("This is my initial content for the file-based task.\n")  
+    f.write("You can add more lines or edit this content as needed.\n")
+    f.write("Feel free to customize this file for your specific task.\n")
+    f.write("This is a sample line to demonstrate the file's content.\n")
 
 # ════════════════════════════════════════════════════════════════════════
 # TODO 2: Write the task, and optionally a permission rule.
@@ -64,8 +78,20 @@ backend = None  # TODO 1: replace with a StateBackend, FilesystemBackend, or Com
 # empty and skipping permissions entirely is also a valid choice.
 # ════════════════════════════════════════════════════════════════════════
 
-TASK = None  # TODO 2: replace with your own task message
-permissions: list[FilesystemPermission] = []  # TODO 2 (optional): add rules here
+TASK = """
+       Search for file "/reference/my_file.txt"
+       Read the file /reference/my_file.txt.
+       then write a child bed time story in 100 words and append to the same file. 
+       The story should be about a brave little rabbit who goes on an adventure in the forest and learns an important lesson about friendship and courage. Make sure the story is engaging, age-appropriate, and has a positive message for young readers.
+       """
+
+permissions: list[FilesystemPermission] = [
+    FilesystemPermission(
+                operations=["write"],
+                paths=["/reference/**"],
+                mode="allow",
+            )
+]  # TODO 2 (optional): add rules here
 
 if backend is None:
     raise NotImplementedError("TODO 1: see the comment block above")
@@ -75,6 +101,7 @@ if TASK is None:
 agent = create_deep_agent(
     model=model,
     backend=backend,
+    #middleware=[FilesystemMiddleware(tools=["read_file", "write_file", "edit_file", "grep", "ls", "glob", "grep"])],
     permissions=permissions,
 )
 

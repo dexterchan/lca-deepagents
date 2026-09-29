@@ -1,3 +1,4 @@
+# %% initialize
 # python/m1/m1.4_homework_filled.py
 """Reference copy of m1.4_homework.py with TODOs 1 and 2 filled in so you
 can run it end to end and see what "done" looks like. This is just one
@@ -6,7 +7,7 @@ possible answer, so yours might be different. Explore!"""
 import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-
+# %% initialize
 from deepagents import create_deep_agent
 from models import model
 
@@ -25,7 +26,7 @@ agent = create_deep_agent(
     name="Homework_Agent",
 )
 
-
+# %% initialize
 # TODO 2 filled in
 def run_test_prompts():
     prompts = [
@@ -40,3 +41,5 @@ def run_test_prompts():
 
 
 run_test_prompts()
+
+# %%
