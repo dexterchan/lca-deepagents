@@ -4,8 +4,10 @@ can run it end to end and see what "done" looks like. This is just one
 possible answer, so yours might be different. Explore!"""
 
 import asyncio
+from pathlib import Path
 
 from deepagents import create_deep_agent
+from deepagents.backends import FilesystemBackend
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
 
@@ -31,11 +33,15 @@ def build_turns() -> list[str]:
 # TODO 2 filled in
 MAX_INPUT_TOKENS = 3000
 
-model.profile = {**model.profile, "max_input_tokens": MAX_INPUT_TOKENS}
+model.profile = {**(model.profile or {}), "max_input_tokens": MAX_INPUT_TOKENS}
+
+# Save agent files (like the conversation history) to real files on disk.
+AGENT_FILES_DIR = Path(__file__).resolve().parent / "agent_files"
 
 agent = create_deep_agent(
     model=model,
     checkpointer=MemorySaver(),
+    backend=FilesystemBackend(root_dir=AGENT_FILES_DIR, virtual_mode=True),
     system_prompt="You are a helpful assistant. Keep every response to one sentence.",
 )
 
@@ -87,12 +93,11 @@ async def main() -> None:
             "so it fires again before the conversation ends."
         )
 
-    state = await agent.aget_state(THREAD)
-    history_file = state.values.get("files", {}).get(HISTORY_PATH)
-    if history_file:
-        content = history_file["content"] if isinstance(history_file, dict) else history_file
+    history_file = AGENT_FILES_DIR / HISTORY_PATH.lstrip("/")
+    if history_file.exists():
+        content = history_file.read_text()
         sections = content.count("## Summarized at")
-        print(f"\n--- {HISTORY_PATH} ({sections} section(s)) ---")
+        print(f"\n--- {history_file} ({sections} section(s)) ---")
         print(content)
 
 

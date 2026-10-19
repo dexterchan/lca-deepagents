@@ -17,6 +17,7 @@ import os
 import markdown as md
 import nh3
 from deepagents import FilesystemPermission, create_deep_agent
+from langchain.agents.middleware import TodoListMiddleware
 from langchain_core.tools import tool
 from tavily import TavilyClient
 
@@ -155,4 +156,5 @@ agent = create_deep_agent(
     system_prompt=EDITOR_PROMPT,
     subagents=[genre_researcher],
     permissions=editor_permissions,
+    middleware=[TodoListMiddleware()],
 )

@@ -10,7 +10,7 @@ code reads the files out of agent state (the "files" channel) after invoke and
 mirrors them to OUT_DIR: the finished newsletter plus each researcher's raw
 /research/<genre>/ archive, so you can inspect what was quarantined there.
 """
-
+import uuid
 from pathlib import Path
 
 from m4_2_newsletter_agent import agent
@@ -18,9 +18,18 @@ from m4_2_newsletter_agent import agent
 OUT_DIR = Path(__file__).resolve().parent / "output"
 OUT_DIR.mkdir(exist_ok=True)
 
+THREAD = {"configurable": {"thread_id": "subagents_demo"}}
+run_id = uuid.uuid4()
+print(f"run with run_id/trace_id: {run_id}")
 result = agent.invoke(
     {"messages": [{"role": "user", "content": "Put together this week's newsletter."}]},
-    config={"recursion_limit": 50},
+    config={
+        "recursion_limit": 50,
+        **THREAD,
+        "metadata": {"trace_id": str(run_id)},
+        "run_name": "newsletter_run",
+        "run_id": run_id,
+    },
 )
 
 # The editor's final reply (coordination summary).
@@ -41,23 +50,34 @@ def _content(fd) -> str:
 
 
 out_root = OUT_DIR.resolve()
-print("\nWriting agent files to disk:")
-for path in sorted(files):
-    # Map the in-state layout onto OUT_DIR: /output/* lands at the root,
-    # /research/<genre>/* keeps its folder structure.
-    rel = path[len("/output/"):] if path.startswith("/output/") else path.lstrip("/")
-    dest = (OUT_DIR / rel).resolve()
-
-    # The file contents are UNTRUSTED web-search text, and the path came from
-    # the agent — so verify the destination stays inside OUT_DIR before writing
-    # (reject any ../ traversal), and only ever write plain text.
-    if dest != out_root and out_root not in dest.parents:
-        print(f"  SKIPPED (escapes output dir): {path}")
-        continue
-
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    body = _content(files[path])
-    dest.write_text(body, encoding="utf-8")
-    print(f"  {path}  ->  {dest.relative_to(out_root)}  ({len(body):,} chars)")
+# print("\nWriting agent files to disk:")
+# for path in sorted(files):
+#     # Map the in-state layout onto OUT_DIR: /output/* lands at the root,
+#     # /research/<genre>/* keeps its folder structure.
+#     rel = path[len("/output/"):] if path.startswith("/output/") else path.lstrip("/")
+#     dest = (OUT_DIR / rel).resolve()
+#     # Path.resolve() converts a (possibly relative or symlinked) path into its
+#     # canonical absolute form — resolving "..", ".", and symlinks so the
+#     # containment check below compares real filesystem locations.
+#     #
+#     # Example:
+#     #   OUT_DIR = Path("/home/me/project/output")
+#     #   rel     = "../../etc/passwd"
+#     #   (OUT_DIR / rel)      -> PosixPath('/home/me/project/output/../../etc/passwd')   # not yet resolved
+#     #   (OUT_DIR / rel).resolve() -> PosixPath('/home/me/etc/passwd')                    # real location
+#     # Without .resolve(), a path containing "../" would still *look* like it
+#     # starts with OUT_DIR and could slip past the containment check.
+#
+#     # The file contents are UNTRUSTED web-search text, and the path came from
+#     # the agent — so verify the destination stays inside OUT_DIR before writing
+#     # (reject any ../ traversal), and only ever write plain text.
+#     if dest != out_root and out_root not in dest.parents:
+#         print(f"  SKIPPED (escapes output dir): {path}")
+#         continue
+#
+#     dest.parent.mkdir(parents=True, exist_ok=True)
+#     body = _content(files[path])
+#     dest.write_text(body, encoding="utf-8")
+#     print(f"  {path}  ->  {dest.relative_to(out_root)}  ({len(body):,} chars)")
 
 print(f"\nOpen {OUT_DIR / 'newsletter.html'} in your browser to read this week's issue.")

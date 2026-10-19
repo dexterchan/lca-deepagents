@@ -1,3 +1,12 @@
+# Recap
+# - Memory is not thread history; checkpointers preserve thread history
+# - Memory is persistent knowledge stored as files
+# - memory=[...] activates MemoryMiddleware for those files
+# - Loaded memory is injected into the system prompt inside <agent_memory>
+# - Agents update memory by editing memory files
+# - The /memories/ backend route determines persistence; the StoreBackend
+#   namespace determines scope
+
 from deepagents import create_deep_agent
 from deepagents.backends import CompositeBackend, StateBackend, StoreBackend
 from deepagents.backends.utils import create_file_data
@@ -42,6 +51,28 @@ store.put(
 """),
 )
 
+# StateBackend vs StoreBackend:
+# - StateBackend keeps files in the agent's graph state. They live only inside
+#   one thread (conversation) and are gone when a new thread starts. Good for
+#   scratch / working files.
+#   Saving state between invokes is the checkpointer's job, and
+#   create_deep_agent's default is checkpointer=None (not in-memory). With
+#   no checkpointer, StateBackend files last for a single invoke only, even
+#   on the same thread_id. Pass checkpointer=InMemorySaver() (or a durable
+#   one) to keep them across invokes. `langgraph dev` / LangGraph Platform
+#   add a checkpointer for you.
+# - StoreBackend keeps files in the LangGraph Store passed as `store=`. They
+#   survive across threads. `namespace` decides whose files they are (here: per
+#   workspace + user, taken from the `context` passed to invoke).
+#   StoreBackend itself is only an adapter: it turns file operations into
+#   store.get/put calls. Where the data really lives depends on the store.
+#   Here that is InMemoryStore, so "persistent" memory still lives in this
+#   Python process and is lost when the script exits. Swap in a durable
+#   store (e.g. PostgresStore) to keep it across restarts.
+# CompositeBackend picks a backend by path prefix: anything under /memories/
+# goes to the StoreBackend, everything else falls back to the StateBackend.
+# The route prefix is stripped before saving, so the agent's
+# "/memories/AGENTS.md" is stored under the key "/AGENTS.md".
 agent = create_deep_agent(
     model=model,
     name="Memory_Agent",

@@ -59,6 +59,17 @@ def build_seed_memory_b() -> str:
 store.put(namespace_from_context(CONTEXT_A), store_memory_path, create_file_data(build_seed_memory_a()))
 store.put(namespace_from_context(CONTEXT_B), store_memory_path, create_file_data(build_seed_memory_b()))
 
+# StateBackend vs StoreBackend:
+# - StateBackend keeps files in the agent's graph state. They live only inside
+#   one thread (conversation) and are gone when a new thread starts. Good for
+#   scratch / working files.
+# - StoreBackend keeps files in the LangGraph Store passed as `store=`. They
+#   survive across threads. `namespace` decides whose files they are (here: per
+#   workspace + user, so context A and B never see each other's memory).
+# CompositeBackend picks a backend by path prefix: anything under /memories/
+# goes to the StoreBackend, everything else falls back to the StateBackend.
+# The route prefix is stripped before saving, so the agent's
+# "/memories/AGENTS.md" is stored under the key "/AGENTS.md".
 agent = create_deep_agent(
     model=model,
     name="Homework_Memory_Agent",

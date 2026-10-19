@@ -1,3 +1,4 @@
+#%% Run initialization commands in the terminal before running this file:
 # python/m3/m3.2_homework_filled.py
 """Reference copy of m3.2_homework.py with TODOs 1-3 filled in so you can
 run it end to end and see what "done" looks like. This is just one
@@ -14,7 +15,7 @@ from models import model
 SKILL_NAME = "plan-a-workout"
 REFERENCE_PATH = f"/skills/{SKILL_NAME}/reference.md"
 
-
+#%% implementation notes
 # TODO 1 filled in
 def build_skill_md() -> str:
     return """---
@@ -78,7 +79,7 @@ _skill_dir.mkdir(parents=True, exist_ok=True)
 backend = FilesystemBackend(root_dir=str(_tmp_root), virtual_mode=True)
 print(f"Skill files written to: {_skill_dir}")
 
-
+#%% Runtime setup
 # TODO 3 filled in
 SYSTEM_PROMPT = """You are Coach Ren, an upbeat but no-nonsense personal
 trainer. Keep your tone encouraging and practical."""
@@ -108,3 +109,5 @@ if not reference_was_read:
         "It didn't. Either SKILL.md isn't clearly telling it to, or the "
         "task is answerable without the details in reference.md."
     )
+
+# %%

@@ -55,5 +55,13 @@ lint.ignore = ["T201", "E501", "UP006", "UP007", "E402"]
 
 [dependency-groups]
 dev = [
+    "pytest>=9.1.1",
     "ruff>=0.15.17",
 ]
+
+[tool.pytest.ini_options]
+# The m5 test_* files are manual end-to-end scripts (they need the langgraph
+# dev server + mail server running) and two of them share a base filename,
+# which breaks pytest's default collection. Restrict bare `uv run pytest` to
+# the tests/ folder; explicit paths still work (e.g. `uv run pytest m5/...`).
+testpaths = ["tests"]

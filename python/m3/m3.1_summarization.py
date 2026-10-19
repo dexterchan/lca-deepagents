@@ -14,32 +14,35 @@ Run:
 """
 
 import asyncio
+import uuid
 
 from deepagents import create_deep_agent
 from langchain_core.messages import HumanMessage
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.memory import InMemorySaver
 
 from models import model
 
 # Shrink the reported context window so summarization triggers at ~595 tokens
 # (85% of 700) instead of the real threshold. Must use model object, not string.
-model.profile = {**model.profile, "max_input_tokens": 700}
+model.profile = {**(model.profile or {}), "max_input_tokens": 700}
 
 agent = create_deep_agent(
     model=model,
-    checkpointer=MemorySaver(),
+    checkpointer=InMemorySaver(),
     system_prompt="You are a helpful assistant. Keep every response to one sentence.",
 )
 
 THREAD = {"configurable": {"thread_id": "demo"}}
 
 
-async def turn(message: str) -> str:
+async def turn(message: str) -> tuple[str, uuid.UUID]:
+    # Give each turn its own run_id so it can be found in LangSmith.
+    run_id = uuid.uuid4()
     result = await agent.ainvoke(
         {"messages": [HumanMessage(content=message)]},
-        config=THREAD,
+        config={**THREAD, "run_id": run_id},
     )
-    return result["messages"][-1].content
+    return result["messages"][-1].content, run_id
 
 
 async def show_state() -> None:
@@ -64,8 +67,9 @@ async def main() -> None:
     for i, message in enumerate(turns, 1):
         print(f"\n{'─' * 50}")
         print(f"Turn {i}  User:  {message}")
-        response = await turn(message)
+        response, run_id = await turn(message)
         print(f"Turn {i}  Agent: {response}")
+        print(f"  run_id : {run_id}")
         await show_state()
 
 
