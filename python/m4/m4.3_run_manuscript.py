@@ -8,12 +8,15 @@ submitted grade: the key ships openly alongside the corpus.
 """
 
 import json
+import uuid
 from pathlib import Path
 
 from m4_3_manuscript_agent import agent
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 
+run_id = uuid.uuid4()
+print(f"run with run_id/trace_id: {run_id}")
 result = agent.invoke(
     {
         "messages": [{
@@ -21,7 +24,12 @@ result = agent.invoke(
             "content": "Run a workflow to find every corrupted sentence in the manuscript.",
         }]
     },
-    config={"recursion_limit": 200},
+    config={
+        "recursion_limit": 200,
+        "metadata": {"trace_id": str(run_id)},
+        "run_name": "manuscript_run",
+        "run_id": run_id,
+    },
 )
 
 report = result["messages"][-1].content
